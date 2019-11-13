@@ -1,0 +1,2 @@
+model_checkpoint_path: "/home/hiranumn/DeepProteinAccuracyNet/models/smfull_adam00005_lddt10_aux033_rep2/model.ckpt"
+all_model_checkpoint_paths: "/home/hiranumn/DeepProteinAccuracyNet/models/smfull_adam00005_lddt10_aux033_rep2/model.ckpt"
