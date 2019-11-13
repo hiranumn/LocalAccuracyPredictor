@@ -1,5 +1,7 @@
-# ErrorPredictor.py
 
+<img src="figures/concept2.png" width="60%">
+
+# ErrorPredictor.py
 A script for predicting protein model accuracy.
 
 ```
@@ -16,7 +18,7 @@ positional arguments:
 optional arguments:
   -h, --help            show this help message and exit
   --pdb, -pdb           Running on a single pdb file instead of a folder (Default: False)
-  --multiDecoy, -mm     running multi-multi model option (Default: False)
+  --multiDecoy, -mm     running multi-decoy model option (Default: False)
   --noEnsemble, -ne     running without model ensembling (Default: False)
   --leavetemp, -lt      leaving temporary files (Default: False)
   --verbose, -v         verbose flag (Default: False)
@@ -68,7 +70,8 @@ Perhaps ```lddt``` is the easiest place to start as it is per-residue quality sc
 If you want to do something more involved, especially for protein complex design, see [example.ipynb](ipynbs/example.ipynb) for getting more specialized metrics. If you want to play with pair-wise error predictions, [samples.ipynb](ipynbs/samples.ipynb) is a good place to start.
 
 # Trouble shooting
-- If ErrorPredictor.py returns an OOM (out of memory) error, your protein is probably too big. Try getting on titan instead of rtx2080 or run without gpu if running time is not your problem. You can also truncate your protein structures although it is not recommended. 
+- If ErrorPredictor.py returns an OOM (out of memory) error, your protein is probably too big. Try getting on titan instead of rtx2080 or run without gpu if running time is not your problem. You can also truncate your protein structures although it is not recommended.
+- Send an e-mail at hiranumn at cs dot washington dot edu.
 
 # Required softwares
 - Python3.5-
