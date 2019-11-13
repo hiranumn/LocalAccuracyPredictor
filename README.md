@@ -1,4 +1,4 @@
-![concepts](figures/concept2.png)
+![concepts](figures/concept2.png| width=100)
 
 # ErrorPredictor.py
 
