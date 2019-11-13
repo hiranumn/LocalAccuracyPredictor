@@ -1,4 +1,4 @@
-<div style="text-align:center"><img src="figures/concept2.png" width="60%"></div>
+<img src="figures/concept2.png" width="60%">
 
 # ErrorPredictor.py
 
