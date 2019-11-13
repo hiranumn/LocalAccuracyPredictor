@@ -71,6 +71,7 @@ If you want to do something more involved, especially for protein complex design
 
 # Trouble shooting
 - If ErrorPredictor.py returns an OOM (out of memory) error, your protein is probably too big. Try getting on titan instead of rtx2080 or run without gpu if running time is not your problem. You can also truncate your protein structures although it is not recommended.
+- If you get import error for pyErrorPred, then you probably moved the script from LocalAccuacyPredictor. In that case, you would have to add pyErrorPred to python path or do so within the script. 
 - Send an e-mail at hiranumn at cs dot washington dot edu.
 
 # Required softwares
