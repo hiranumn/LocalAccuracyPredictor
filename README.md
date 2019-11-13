@@ -92,6 +92,9 @@ chainB_lddt    = np.mean(get_lddt(pred["estogram"], np.multiply(map2, pred["mask
 score          = interface_lddt+chainA_lddt
 ```
 
+# Trouble shooting
+- If ErrorPredictor.py returns an OOM (out of memory) error, your protein is probably too big. Try getting on titan instead of rtx2080 or run without gpu if running time is not your problem. You can also truncate your protein structures although it is not recommended. 
+
 # Required softwares
 - Python3.5-
 - Pyrosetta
