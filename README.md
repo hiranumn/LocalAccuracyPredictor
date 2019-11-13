@@ -1,7 +1,7 @@
 
-# ErrorPredictor.py
 <img src="figures/concept2.png" width="60%">
 
+# ErrorPredictor.py
 A script for predicting protein model accuracy.
 
 ```
