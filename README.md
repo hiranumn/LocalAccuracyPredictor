@@ -18,7 +18,7 @@ positional arguments:
 optional arguments:
   -h, --help            show this help message and exit
   --pdb, -pdb           Running on a single pdb file instead of a folder (Default: False)
-  --multiDecoy, -mm     running multi-multi model option (Default: False)
+  --multiDecoy, -mm     running multi-decoy model option (Default: False)
   --noEnsemble, -ne     running without model ensembling (Default: False)
   --leavetemp, -lt      leaving temporary files (Default: False)
   --verbose, -v         verbose flag (Default: False)
