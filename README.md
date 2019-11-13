@@ -28,11 +28,27 @@ optional arguments:
 
 v0.0.1
 ```
+# Example usages (for IPD people)
+Type the following commands to activate tensorflow environment with pyrosetta3.
+```
+source activate tensorflow
+source /software/pyrosetta3/setup.sh
+```
 
-# Required softwares
-- Python3.5-
-- Pyrosetta
-- Tensorflow 1.4 (not Tensorflow 2.0)
+Running on a folder of pdbs (foldername: ```samples```)
+```
+python ErrorPredictor.py -r -v samples outputs
+```
+
+Running on a single pdb file (inputname: ```input.pdb```)
+```
+python ErrorPredictor.py -r -v --pdb input.pdb output.npz
+```
+
+Only doing the feature processing (foldername: ```samples```)
+```
+python ErrorPredictor.py -r -v -f samples outputs
+```
 
 # Outputs
 Output of the network is written in [input_file_name].npz.
@@ -76,10 +92,13 @@ chainB_lddt    = np.mean(get_lddt(pred["estogram"], np.multiply(map2, pred["mask
 score          = interface_lddt+chainA_lddt
 ```
 
+# Required softwares
+- Python3.5-
+- Pyrosetta
+- Tensorflow 1.4 (not Tensorflow 2.0)
+
 # Updates
+- Reorganized code so that it is a python package, 2019.11.10
 - Added some analysis code, 2019.11.6
 - Distance matrix calculation speed-up, 2019.10.25
 - v 0.0.1 released, 2019.10.19
-
-# ToDo
-- Engineering so that we can run it for bigger protein targets.
