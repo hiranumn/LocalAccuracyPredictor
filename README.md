@@ -3,8 +3,8 @@
 A script for predicting protein model accuracy.
 
 ```
-usage: ErrorPredictor.py [-h] [--multiDecoy] [--multiDecoy2] [--noEnsemble] [--leavetemp] [--verbose] [--process PROCESS]
-                         [--featurize] [--reprocess]
+usage: ErrorPredictor.py [-h] [--pdb] [--multiDecoy] [--noEnsemble] [--leavetemp] [--verbose] [--process PROCESS]
+                         [--gpu GPU] [--featurize] [--reprocess]
                          infolder outfolder
 
 Error predictor network
@@ -15,22 +15,24 @@ positional arguments:
 
 optional arguments:
   -h, --help            show this help message and exit
-  --multiDecoy, -mm     running multi-decoy network option (Default: False)
-  --multiDecoy2, -mm2   running multi-decoy (trained w/o native in dist but w native in trainign set) model option
-                        (Default: False)
+  --pdb, -pdb           Running on a single pdb file instead of a folder (Default: False)
+  --multiDecoy, -mm     running multi-multi model option (Default: False)
   --noEnsemble, -ne     running without model ensembling (Default: False)
   --leavetemp, -lt      leaving temporary files (Default: False)
   --verbose, -v         verbose flag (Default: False)
   --process PROCESS, -p PROCESS
                         # of cpus to use for featurization (Default: 1)
+  --gpu GPU, -g GPU     gpu device to use (default gpu0)
   --featurize, -f       running only featurization (Default: False)
   --reprocess, -r       reprocessing all feature files (Default: False)
+
+v0.0.1
 ```
 
 # Required softwares
 - Python3.5-
 - Pyrosetta
-- Tensorflow 1.4
+- Tensorflow 1.4 (not Tensorflow 2.0)
 
 # Outputs
 Output of the network is written in [input_file_name].npz.
