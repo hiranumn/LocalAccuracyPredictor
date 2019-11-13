@@ -50,47 +50,22 @@ Only doing the feature processing (foldername: ```samples```)
 python ErrorPredictor.py -r -v -f samples outputs
 ```
 
-# Outputs
-Output of the network is written in [input_file_name].npz.
+# How to look at outputs
+Output of the network is written to ```[input_file_name].npz.```
 You can extract the predictions as follows.
 
 ```
 import numpy as np
+
 x = np.load("testoutput.npz")
-lddt = x["lddt"] # per residue lddt
-estogram = x["estogram"] # per pairwise distance e-stogram
-mask = x["mask"] # mask predicting native < 15
+
+lddt = x["lddt"]           # per residue lddt
+estogram = x["estogram"]   # per pairwise distance e-stogram
+mask = x["mask"]           # mask predicting native < 15
 ```
+Perhaps ```lddt``` is the easiest place to start as it is per-residue quality score. You can simply take an average if you want a global score per protein structure. 
 
-# What are the numbers you want to check?
-See example.ipynb for how to interpret them.
-```
-from analyze import *
-import numpy as np
-
-# Get filenames of original pdb and predictions
-predname = '/projects/ml/for/docking/output_pdbs/longxing_HEEH_14976_000000014_0001_0001.npz'
-pdbname  = '/projects/ml/for/docking/pdbs/longxing_HEEH_14976_000000014_0001_0001.pdb'
-
-# Load prediction
-pred = np.load(predname)
-
-# Get inter and intra interaction masks
-# Returns interface map, chainA map, and chainB map
-imap, [map1, map2] = get_interaction_map(pdbname)
-
-# Good for analyzing monomer
-global_lddt    = np.mean(get_lddt(pred["estogram"], pred["mask"]))
-global_lddt2   = np.mean(x["lddt"]) # should be the same thing.
-
-# Good for analyzing binder + target
-interface_lddt = np.mean(get_lddt(pred["estogram"], np.multiply(imap, pred["mask"])))
-chainA_lddt    = np.mean(get_lddt(pred["estogram"], np.multiply(map1, pred["mask"])))
-chainB_lddt    = np.mean(get_lddt(pred["estogram"], np.multiply(map2, pred["mask"])))
-
-# Best metric for binder + target (with chainA as binder of course)
-score          = interface_lddt+chainA_lddt
-```
+If you want to do something more involved, especially for protein complex design, see (example.ipynb)[ipynbs/example.ipynb] for getting more specialized metrics.
 
 # Trouble shooting
 - If ErrorPredictor.py returns an OOM (out of memory) error, your protein is probably too big. Try getting on titan instead of rtx2080 or run without gpu if running time is not your problem. You can also truncate your protein structures although it is not recommended. 
