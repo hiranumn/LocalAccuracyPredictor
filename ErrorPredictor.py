@@ -211,12 +211,15 @@ def main():
         insamplename = infilepath.split("/")[-1][:-4]
         outfolder = "/".join(outfilepath.split("/")[:-1])
         outsamplename = outfilepath.split("/")[-1][:-4]
+        feature_file_name = join(outfolder, outsamplename+".features.npz")
         print("only working on a file:", outfolder, outsamplename)
-        # Process
-        pyErrorPred.process((join(infolder, insamplename+".pdb"),
-                             join(outfolder, outsamplename+".features.npz"),
-                             args.verbose))   
-        if isfile(join(outfolder, outsamplename+".features.npz")):
+        # Process if file does not exists or reprocess flag is set
+        
+        if (not isfile(feature_file_name)) or args.reprocess:
+            pyErrorPred.process((join(infolder, insamplename+".pdb"),
+                                feature_file_name,
+                                args.verbose))   
+        if isfile(feature_file_name):
             pyErrorPred.predict([outsamplename],
                     modelpath,
                     outfolder,
@@ -235,5 +238,7 @@ def main():
                                   verbose=args.verbose,
                                   multimodel=False,
                                   noEnsemble=args.noEnsemble)
+        else:
+            print(f"Feature file does not exist: {feature_file_name}")
 if __name__== "__main__":
     main()
