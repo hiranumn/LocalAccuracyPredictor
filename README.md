@@ -1,3 +1,5 @@
+![concepts](figures/concept2.png)
+
 # ErrorPredictor.py
 
 A script for predicting protein model accuracy.
