@@ -239,6 +239,6 @@ def main():
                                   multimodel=False,
                                   noEnsemble=args.noEnsemble)
         else:
-            print(f"Feature file does not exist: {feature_file_name}")
+            print(f"Feature file does not exist: {feature_file_name}", file=sys.stderr)
 if __name__== "__main__":
     main()
