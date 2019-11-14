@@ -15,10 +15,10 @@ def main():
                                      epilog="v0.0.1")
     parser.add_argument("infolder",
                         action="store",
-                        help="input folder name full of pdbs")
+                        help="input folder name full of pdbs or path to a single pdb")
     parser.add_argument("outfolder",
-                        action="store",
-                        help="output folder name")
+                        action="store", nargs=argparse.REMAINDER,
+                        help="output folder name. If a pdb path is passed this needs to be a .npz file. Can also be empty. Default is current folder or pdbname.npz")
     parser.add_argument("--pdb",
                         "-pdb",
                         action="store_true",
@@ -68,10 +68,28 @@ def main():
     ################################
     # Checking file availabilities #
     ################################
+    #made outfolder an optional positinal argument. So check manually it's lenght and unpack the string
+    if len(args.outfolder)>1:
+        print(f"Only one output folder can be specified, but got {args.outfolder}", file=sys.stderr)
+        return -1
+
+    if len(args.outfolder)==0:
+        args.outfolder = ""
+    else:
+        args.outfolder = args.outfolder[0]
+
+
+    if args.infolder.endswith('.pdb'):
+        args.pdb = True
+    
     if not args.pdb:
         if not isdir(args.infolder):
             print("Input folder does not exist.", file=sys.stderr)
             return -1
+        
+        #default is current folder
+        if args.outfolder == "":
+            args.outfolder='.'
         if not isdir(args.outfolder):
             print("Creating output folder:", args.outfolder)
             os.mkdir(args.outfolder)
@@ -79,7 +97,11 @@ def main():
         if not isfile(args.infolder):
             print("Input file does not exist.", file=sys.stderr)
             return -1
- 
+        
+        #default is output name with extension changed to npz
+        if args.outfolder == "":
+            args.outfolder = os.path.splitext(args.infolder)[0]+".npz"
+
         if not(".pdb" in args.infolder and ".npz" in args.outfolder):
             print("Input needs to be in .pdb format, and output needs to be in .npz format.", file=sys.stderr)
             return -1
@@ -189,12 +211,15 @@ def main():
         insamplename = infilepath.split("/")[-1][:-4]
         outfolder = "/".join(outfilepath.split("/")[:-1])
         outsamplename = outfilepath.split("/")[-1][:-4]
+        feature_file_name = join(outfolder, outsamplename+".features.npz")
         print("only working on a file:", outfolder, outsamplename)
-        # Process
-        pyErrorPred.process((join(infolder, insamplename+".pdb"),
-                             join(outfolder, outsamplename+".features.npz"),
-                             args.verbose))   
-        if isfile(join(outfolder, outsamplename+".features.npz")):
+        # Process if file does not exists or reprocess flag is set
+        
+        if (not isfile(feature_file_name)) or args.reprocess:
+            pyErrorPred.process((join(infolder, insamplename+".pdb"),
+                                feature_file_name,
+                                args.verbose))   
+        if isfile(feature_file_name):
             pyErrorPred.predict([outsamplename],
                     modelpath,
                     outfolder,
@@ -213,5 +238,7 @@ def main():
                                   verbose=args.verbose,
                                   multimodel=False,
                                   noEnsemble=args.noEnsemble)
+        else:
+            print(f"Feature file does not exist: {feature_file_name}")
 if __name__== "__main__":
     main()
