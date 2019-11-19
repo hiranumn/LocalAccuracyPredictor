@@ -5,10 +5,10 @@ import numpy as np
 import sys
 from os import listdir
 from os.path import isfile, join
-import matplotlib.pyplot as plt
-import seaborn as sns
-import scipy as sp
-import scipy.stats as spstats
+#import matplotlib.pyplot as plt
+#import seaborn as sns
+#import scipy as sp
+#import scipy.stats as spstats
 import pickle
 from .resnet import *
 
