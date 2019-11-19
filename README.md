@@ -42,9 +42,9 @@ Running on a folder of pdbs (foldername: ```samples```)
 python ErrorPredictor.py -r -v samples outputs
 ```
 
-Running on a single pdb file (inputname: ```input.pdb```)
+Running on a single pdb file (inputname: ```input.pdb```). Output name is optional and defaults to input.npz
 ```
-python ErrorPredictor.py -r -v --pdb input.pdb output.npz
+python ErrorPredictor.py -r -v --pdb input.pdb [output.npz]
 ```
 
 Only doing the feature processing (foldername: ```samples```)
@@ -75,9 +75,9 @@ If you want to do something more involved, especially for protein complex design
 - Send an e-mail at hiranumn at cs dot washington dot edu.
 
 # Required softwares
-- Python3.5-
-- Pyrosetta
-- Tensorflow 1.4 (not Tensorflow 2.0)
+- Python3.5>
+- Pyrosetta 
+- Tensorflow 1.14 (not Tensorflow 2.0)
 
 # Updates
 - Reorganized code so that it is a python package, 2019.11.10
