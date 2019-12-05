@@ -87,6 +87,7 @@ If you want to do something more involved, especially for protein complex design
 - Tensorflow 1.14 (not Tensorflow 2.0)
 
 # Updates
+- Added reference state mode, 2019.12.4
 - Reorganized code so that it is a python package, 2019.11.10
 - Added some analysis code, 2019.11.6
 - Distance matrix calculation speed-up, 2019.10.25
