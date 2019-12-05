@@ -28,7 +28,12 @@ def main():
                         "-mm",
                         action="store_true",
                         default=False,
-                        help="running multi-multi model option (Default: False)")
+                        help="running the multi-model option (Default: False)")
+    parser.add_argument("--reference",
+                        "-ref",
+                        action="store_true",
+                        default=False,
+                        help="running the reference model trained based on distance information only. (Default: False)")
     parser.add_argument("--noEnsemble",
                         "-ne", 
                         action="store_true",
@@ -112,6 +117,8 @@ def main():
     # base = "models/"
     if args.multiDecoy:
         modelpath = base+"mmfull_adam00005_lddt10_aux033"
+    elif args.reference:
+        modelpath = base+"smdistonly"
     else:
         modelpath = base+"smfull_adam00005_lddt10_aux033"
         
@@ -176,10 +183,12 @@ def main():
         if args.multiDecoy:
             pyErrorPred.getDistribution(args.outfolder)
 
+
+        print(modelpath)
         # Exit if only featurization is needed
         if args.featurize:
             return 0
-
+        
         ###########################
         # Prediction happens here #
         ###########################
@@ -189,12 +198,13 @@ def main():
                             args.outfolder,
                             verbose=args.verbose,
                             multimodel=args.multiDecoy,
-                            noEnsemble=args.noEnsemble)
+                            noEnsemble=args.noEnsemble,
+                            reference=args.reference)
 
         if not args.noEnsemble:
             pyErrorPred.merge(samples,
                               args.outfolder,
-                              verbose=False)
+                              verbose=args.verbose)
 
         if not args.leavetemp:
             pyErrorPred.clean(samples,
@@ -212,7 +222,8 @@ def main():
         outfolder = "/".join(outfilepath.split("/")[:-1])
         outsamplename = outfilepath.split("/")[-1][:-4]
         feature_file_name = join(outfolder, outsamplename+".features.npz")
-        print("only working on a file:", outfolder, outsamplename)
+        if args.verbose: 
+            print("only working on a file:", outfolder, outsamplename)
         # Process if file does not exists or reprocess flag is set
         
         if (not isfile(feature_file_name)) or args.reprocess:
@@ -225,7 +236,8 @@ def main():
                     outfolder,
                     verbose=args.verbose,
                     multimodel=False,
-                    noEnsemble=args.noEnsemble)
+                    noEnsemble=args.noEnsemble,
+                    reference=args.reference)
             
             if not args.noEnsemble:
                 pyErrorPred.merge([outsamplename],

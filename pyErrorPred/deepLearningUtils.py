@@ -17,8 +17,9 @@ class dataloader:
                  features=["obt", "prop", "dist"], # Kinds of features to incooperate.
                  verbose=False,
                  distribution=False,
+                 include_native=True,
+                 include_native_dist=True,
                 ):
-        
         
         self.n = {}
         self.samples_dict = {}
@@ -31,6 +32,8 @@ class dataloader:
         self.features = features
         self.verbose = verbose
         self.distribution = distribution
+        self.include_native = include_native
+        self.include_native_dist = include_native_dist
         if self.verbose: print("features:", self.features)
             
         # Loading file availability
@@ -38,6 +41,9 @@ class dataloader:
         for p in proteins:
             path = datadir+p+"/"
             samples_files = [f[:-4] for f in listdir(path) if isfile(join(path, f)) and "npz" in f]
+            # Removing native from distribution if you are using distribution option
+            if not self.include_native:
+                samples_files = [s for s in samples_files if s != "native"]
             np.random.shuffle(samples_files)
             samples = []
             for s in samples_files:
@@ -84,7 +90,11 @@ class dataloader:
         maps = data["maps"]
         tbt = data["tbt"].T
         sep = seqsep(psize)
-        dist = np.load(self.datadir+pname+"/dist.npy")
+        
+        if self.include_native_dist:
+            dist = np.load(self.datadir+pname+"/dist.npy")
+        else:
+            dist = np.load(self.datadir+pname+"/dist2.npy")
         
         # Get target
         lddt = np.genfromtxt(self.datadir+pname+"/"+sample+".lddt.csv", skip_header=11)[:,4]

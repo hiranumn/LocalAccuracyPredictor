@@ -5,6 +5,7 @@ tf.logging.set_verbosity(tf.logging.ERROR)
 import time
 from .resnet import *
 from .model import *
+from .deepLearningUtils import *
 
 # Loads in files for one prediction
 def getData(tmp, mm, outfolder):
@@ -65,14 +66,14 @@ def getDistribution(outfolder):
     normalized = np.sum(binned, axis=0)/tbt.shape[0]
     np.save(join(outfolder, "dist.npy"), normalized)
     
-def predict(samples, modelpath, outfolder, noEnsemble=False, verbose=False, multimodel=False):
+def predict(samples, modelpath, outfolder, noEnsemble=False, verbose=False, multimodel=False, reference=False):
     n_models = 2 if noEnsemble else 5
     for i in range(1, n_models):
         modelname = modelpath+"_rep"+str(i)
         if verbose: print("Loading", modelname)
-        if not multimodel:
+        if multimodel:
             model = Model(obt_size=70,
-                          tbt_size=33,
+                          tbt_size=54,
                           prot_size=None,
                           num_chunks=5,
                           optimizer="adam",
@@ -80,9 +81,22 @@ def predict(samples, modelpath, outfolder, noEnsemble=False, verbose=False, mult
                           lddt_weight=10.0,
                           name=modelname,
                           verbose=False)
+        elif reference:
+            masks = getMask(["rosetta", "orientation", "angles", "ss", "aa"])
+            model = Model(obt_size=70,
+                          tbt_size=33,
+                          prot_size=None,
+                          num_chunks=5,
+                          optimizer="adam",
+                          mask_weight=0.33,
+                          lddt_weight=10.0,
+                          feature_mask = masks,
+                          ignore3dconv = True,
+                          name=modelname,
+                          verbose=False)
         else:
             model = Model(obt_size=70,
-                          tbt_size=54,
+                          tbt_size=33,
                           prot_size=None,
                           num_chunks=5,
                           optimizer="adam",
