@@ -1,0 +1,2 @@
+model_checkpoint_path: "/net/scratch/hiranumn/models/smdistonly_rep3/model.ckpt"
+all_model_checkpoint_paths: "/net/scratch/hiranumn/models/smdistonly_rep3/model.ckpt"
