@@ -5,20 +5,27 @@
 A script for predicting protein model accuracy.
 
 ```
-usage: ErrorPredictor.py [-h] [--pdb] [--multiDecoy] [--noEnsemble] [--leavetemp] [--verbose] [--process PROCESS]
-                         [--gpu GPU] [--featurize] [--reprocess]
-                         infolder outfolder
+usage: ErrorPredictor.py [-h] [--pdb] [--multiDecoy] [--reference]
+                         [--noEnsemble] [--leavetemp] [--verbose]
+                         [--process PROCESS] [--gpu GPU] [--featurize]
+                         [--reprocess]
+                         infolder ...
 
 Error predictor network
 
 positional arguments:
-  infolder              input folder name full of pdbs
-  outfolder             output folder name
+  infolder              input folder name full of pdbs or path to a single pdb
+  outfolder             output folder name. If a pdb path is passed this needs
+                        to be a .npz file. Can also be empty. Default is
+                        current folder or pdbname.npz
 
 optional arguments:
   -h, --help            show this help message and exit
-  --pdb, -pdb           Running on a single pdb file instead of a folder (Default: False)
-  --multiDecoy, -mm     running multi-decoy model option (Default: False)
+  --pdb, -pdb           Running on a single pdb file instead of a folder
+                        (Default: False)
+  --multiDecoy, -mm     running the multi-model option (Default: False)
+  --reference, -ref     running the reference model trained based on distance
+                        information only. (Default: False)
   --noEnsemble, -ne     running without model ensembling (Default: False)
   --leavetemp, -lt      leaving temporary files (Default: False)
   --verbose, -v         verbose flag (Default: False)
