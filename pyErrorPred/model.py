@@ -11,6 +11,8 @@ from os.path import isfile, join
 #import scipy.stats as spstats
 import pickle
 from .resnet import *
+from .deepLearningUtils import *
+from .layers import *
 
 class Model:
     def __init__(self,
@@ -24,17 +26,31 @@ class Model:
                  lddt_weight=10.0,
                  feature_mask=None,
                  ignore3dconv=False,
+                 no_last_dilation=False,
+                 scaled_loss=False,
+                 label_smoothing=False,
+                 nretype=167,
+                 partial_instance_norm=False,
+                 transpose_matrix=False,
+                 self_attention=False,
                  verbose=False):
 
         # Defining network architecture
         self.obt_size = obt_size
         self.tbt_size = tbt_size
         self.prot_size = prot_size
-        self.nretype = 20
         self.lddt_weight = lddt_weight
         self.mask_weight = mask_weight
         self.feature_mask = feature_mask
         self.ignore3dconv = ignore3dconv
+        
+        self.no_last_dilation = no_last_dilation
+        self.scaled_loss = scaled_loss
+        self.label_smoothing = label_smoothing
+        self.nretype = nretype
+        self.partial_instance_norm = partial_instance_norm
+        self.transpose_matrix = transpose_matrix
+        self.self_attention = self_attention
         
         # Other network definining parameters
         self.num_chunks = num_chunks
@@ -75,7 +91,7 @@ class Model:
             # 3D convolution part
             idx = tf.placeholder(dtype=tf.int32, shape=(None, 5))
             val = tf.placeholder(dtype=tf.float32, shape=(None))
-            grid3d = tf.scatter_nd(idx, val, [nres, 24,24,24,167])
+            grid3d = tf.scatter_nd(idx, val, [nres, 24, 24, 24, self.nretype])
             
             # Training parameters
             dropout_rate = tf.placeholder_with_default(0.15, shape=()) 
@@ -92,7 +108,7 @@ class Model:
         with tf.name_scope('3d_conv'):
             if not self.ignore3dconv:
                 # retyper: 1x1x1 convolution
-                layers.append(tf.layers.conv3d(grid3d, self.nretype, 1, padding='same', use_bias=False))
+                layers.append(tf.layers.conv3d(grid3d, 20, 1, padding='same', use_bias=False))
 
                 # 1st conv3d & batch_norm & droput & activation
                 layers.append(tf.layers.conv3d(layers[-1], 20, 3, padding='valid', use_bias=True))
@@ -131,19 +147,41 @@ class Model:
             layers.append(tf.layers.conv2d(layers[-1], 32, 1, padding='SAME'))
             layers.append(tf.contrib.layers.instance_norm(layers[-1]))
             layers.append(tf.nn.elu(layers[-1]))
-
             # Resnet prediction with alpha fold style
-            resnet_output = build_resnet(layers[-1], 128, self.num_chunks, isTraining)
+            resnet_output = build_resnet(_input  = layers[-1],
+                                         channel = 128, 
+                                         num_chunks = self.num_chunks,
+                                         require_in = self.partial_instance_norm, 
+                                         isTraining = isTraining,
+                                         no_last_dilation = False)
+            
             layers.append(tf.nn.elu(resnet_output))
             
+            if self.self_attention:
+                layers.append(pixelSelfAttention(layers[-1], maxpool=3))
+            
             # Resnet prediction for errorgram branch
-            error_predictor = build_resnet(layers[-1], 128, 1, isTraining)
+            error_predictor = build_resnet(_input  = layers[-1],
+                                           channel = 128,
+                                           num_chunks = 1,
+                                           require_in = False, 
+                                           transpose_matrix=self.transpose_matrix,
+                                           isTraining = isTraining,
+                                           no_last_dilation = self.no_last_dilation)
+            
             error_predictor = tf.nn.elu(error_predictor)
             logits_error = tf.layers.conv2d(error_predictor, filters=15, kernel_size=(1,1))
             estogram_predicted = tf.nn.softmax(logits_error)[0]
             
             # Resnet prediction for errorgram branch
-            mask_predictor = build_resnet(layers[-1], 128, 1, isTraining)
+            mask_predictor = build_resnet(_input = layers[-1],
+                                          channel = 128,
+                                          num_chunks = 1,
+                                          require_in = False, 
+                                          transpose_matrix=self.transpose_matrix,
+                                          isTraining = isTraining,
+                                          no_last_dilation = self.no_last_dilation)
+            
             mask_predictor = tf.nn.elu(mask_predictor)
             logits_mask = tf.layers.conv2d(mask_predictor, filters=1, kernel_size=(1,1))[:, :, :, 0]
             mask_predicted = tf.nn.sigmoid(logits_mask)[0]
@@ -157,16 +195,29 @@ class Model:
             # Estogram evaluation via Crossentropy
             if self.verbose: print("Check 1:", estogram.shape, logits_error.shape)
             estogram_entropy = tf.nn.softmax_cross_entropy_with_logits_v2(labels=estogram, logits=logits_error, axis=-1)
-            estogram_cost = tf.reduce_mean(estogram_entropy, axis=[0,1,2])
             
             # Auxiliary estogram
             if self.verbose: print("Check 2:", mask.shape, logits_mask.shape)
             mask_entropy = tf.nn.sigmoid_cross_entropy_with_logits(labels=mask, logits=logits_mask)
-            mask_cost = tf.reduce_mean(mask_entropy, axis=[0,1,2])
 
-            # lddt evaluation via MSE
+            # Lddt evaluation via MSE
             if self.verbose: print("Check 3:", lddt.shape, lddt_predicted.shape)
-            lddt_cost = tf.reduce_mean(tf.square(lddt-lddt_predicted))
+            lddt_mse = tf.square(lddt-lddt_predicted)
+            
+            # Loss aggregation
+            if self.scaled_loss:
+                # scale it by factor of protein size
+                estogram_cost = tf.reduce_mean(estogram_entropy, axis=[2])
+                mask_cost = tf.reduce_mean(mask_entropy, axis=[2])
+                lddt_cost = lddt_mse
+                # take sum and divide by constant (Average protein size)
+                estogram_cost = tf.reduce_sum(estogram_cost)/100
+                mask_cost = tf.reduce_sum(mask_cost)/100
+                lddt_cost = tf.reduce_sum(lddt_cost)/100
+            else:
+                estogram_cost = tf.reduce_mean(estogram_entropy, axis=[0,1,2])
+                mask_cost = tf.reduce_mean(mask_entropy, axis=[0,1,2])
+                lddt_cost = tf.reduce_mean(lddt_mse)
             
             # Getting the total cost
             cost = estogram_cost + self.lddt_weight*lddt_cost + self.mask_weight*mask_cost
@@ -242,11 +293,15 @@ class Model:
                 if not self.feature_mask is None:
                     f1d[:, self.feature_mask[0]] = 0
                     f2d[:, :, self.feature_mask[1]] = 0
+                
+                estogram = y[1]
+                if self.label_smoothing:
+                    estogram = apply_label_smoothing(estogram)
                     
                 if self.ignore3dconv:
                     feed_dict = {self.ops["obt"]: f1d,\
                                  self.ops["tbt"]: f2d,\
-                                 self.ops["estogram"]: y[1],\
+                                 self.ops["estogram"]: estogram,\
                                  self.ops["mask"]: y[2]<15,\
                                  self.ops["dropout_rate"]: 0.15,\
                                  self.ops["isTraining"]: True,
@@ -256,7 +311,7 @@ class Model:
                                  self.ops["tbt"]: f2d,\
                                  self.ops["idx"]: f3d[0],\
                                  self.ops["val"]: f3d[1],\
-                                 self.ops["estogram"]: y[1],\
+                                 self.ops["estogram"]: estogram,\
                                  self.ops["mask"]: y[2]<15,\
                                  self.ops["dropout_rate"]: 0.15,\
                                  self.ops["isTraining"]: True,

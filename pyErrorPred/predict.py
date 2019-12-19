@@ -66,7 +66,7 @@ def getDistribution(outfolder):
     normalized = np.sum(binned, axis=0)/tbt.shape[0]
     np.save(join(outfolder, "dist.npy"), normalized)
     
-def predict(samples, modelpath, outfolder, noEnsemble=False, verbose=False, multimodel=False, reference=False):
+def predict(samples, modelpath, outfolder, noEnsemble=False, verbose=False, multimodel=False, reference=False, transpose=False):
     n_models = 2 if noEnsemble else 5
     for i in range(1, n_models):
         modelname = modelpath+"_rep"+str(i)
@@ -111,6 +111,9 @@ def predict(samples, modelpath, outfolder, noEnsemble=False, verbose=False, mult
             tmp = join(outfolder, samples[j]+".features.npz")
             batch = getData(tmp, multimodel, outfolder)
             lddt, estogram, mask = model.predict2(batch)
+            if transpose:
+                estogram = (estogram + np.transpose(estogram, [1,0,2]))/2
+                mask = (mask + mask.T)/2
             if noEnsemble:
                 np.savez_compressed(join(outfolder, samples[j]+".npz"),
                                     lddt = lddt,

@@ -6,3 +6,4 @@ from .model import *
 from .pyprotein import *
 from .featurize import *
 from .predict import*
+from .layers import*

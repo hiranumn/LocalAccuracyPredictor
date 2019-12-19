@@ -19,6 +19,7 @@ class dataloader:
                  distribution=False,
                  include_native=True,
                  include_native_dist=True,
+                 distance_cutoff = 6
                 ):
         
         self.n = {}
@@ -34,6 +35,7 @@ class dataloader:
         self.distribution = distribution
         self.include_native = include_native
         self.include_native_dist = include_native_dist
+        self.distance_cutoff = distance_cutoff
         if self.verbose: print("features:", self.features)
             
         # Loading file availability
@@ -104,7 +106,7 @@ class dataloader:
         # Transform input distance
         if transform:
             tbt[:,:,0] = f(tbt[:,:,0])
-            maps = f(maps)
+            maps = f(maps, cutoff=self.distance_cutoff)
         
         self.cur_index += 1
         if self.cur_index == len(self.proteins):        
@@ -143,6 +145,22 @@ def seqsep(psize, normalizer=100, axis=-1):
         for j in range(psize):
             ret[i,j] = abs(i-j)*1.0/100-1.0
     return np.expand_dims(ret, axis)
+
+def apply_label_smoothing(x, alpha=0.2, axis=-1):
+    minind = 0
+    maxind = x.shape[axis]-1
+    
+    # Index of true and semi-true labels
+    index = np.argmax(x, axis=axis)
+    lower = np.clip(index-1, minind, maxind)
+    higher = np.clip(index+1, minind, maxind)
+    
+    # Location-aware label smoothing
+    true = np.eye(maxind+1)[index]*(1-alpha)
+    semi_lower = np.eye(maxind+1)[lower]*(alpha/2)
+    semi_higher= np.eye(maxind+1)[higher]*(alpha/2)
+    
+    return true+semi_lower+semi_higher
 
 # Getting masks
 def getMask(exclude):

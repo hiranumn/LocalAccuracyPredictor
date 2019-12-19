@@ -61,6 +61,60 @@ def main():
                         default=False,
                         help="Training without 3d convolutions (Default: False)")
     
+    parser.add_argument("--no_cutoff",
+                        "-ncut",
+                        action="store_true",
+                        default=False,
+                        help="Not having the -6 cutoff for auxiliary distance matrix (Default: False)")
+    
+    parser.add_argument("--esto_loss_only",
+                        "-elo",
+                        action="store_true",
+                        default=False,
+                        help="Estogram loss only (Default: False)")
+    
+    parser.add_argument("--no_last_dilation",
+                        "-nld",
+                        action="store_true",
+                        default=False,
+                        help="not using dilation for very last part of resnet (Default: False)")
+    
+    parser.add_argument("--scaled_loss",
+                        "-scl",
+                        action="store_true",
+                        default=False,
+                        help="using loss scaled with protein size. (Default: False)")
+    
+    parser.add_argument("--label_smoothing",
+                        "-lsm",
+                        action="store_true",
+                        default=False,
+                        help="apply label smoothing at training time. (Default: False)")
+    
+    parser.add_argument("--new",
+                        "-new",
+                        action="store_true",
+                        default=False,
+                        help="apply nrestype 20 instead of 167. Should be used for all newer architectures (Default: False)")
+    
+    parser.add_argument("--partial",
+                        "-partial",
+                        action="store_true",
+                        default=False,
+                        help="partial label smoothing. (Default: False)")
+    
+    parser.add_argument("--transpose_matrix",
+                        "-transmtx",
+                        action="store_true",
+                        default=False,
+                        help="Transpose last few blocks (Default: False)")
+
+    parser.add_argument("--self_attention",
+                        "-selfattn",
+                        action="store_true",
+                        default=False,
+                        help="Put self attention on last few blocks(Default: False)")
+
     parser.add_argument("--decay",
                         "-d", action="store",
                         type=float,
@@ -107,28 +161,64 @@ def main():
     ##########################
     script_dir = os.path.dirname(__file__)
     base = join(script_dir, "data/")
-    X = pyErrorPred.dataloader(np.load(join(base,"train_proteins.npy")),
-                               lengthmax=280,
-                               distribution=False)
-    V = pyErrorPred.dataloader(np.load(join(base,"valid_proteins.npy")),
-                               lengthmax=280,
-                               distribution=False)
+    if args.no_cutoff:
+        X = pyErrorPred.dataloader(np.load(join(base,"train_proteins.npy")),
+                                   lengthmax=280,
+                                   distribution=False,
+                                   distance_cutoff=0)
+        V = pyErrorPred.dataloader(np.load(join(base,"valid_proteins.npy")),
+                                   lengthmax=280,
+                                   distribution=False,
+                                   distance_cutoff=0)
+    else:
+        X = pyErrorPred.dataloader(np.load(join(base,"train_proteins.npy")),
+                                   lengthmax=280,
+                                   distribution=False)
+        V = pyErrorPred.dataloader(np.load(join(base,"valid_proteins.npy")),
+                                   lengthmax=280,
+                                   distribution=False)
     
     if not args.silent:
         print("Building a network")
     #########################
     ### Training a model  ###
     #########################
-    model = pyErrorPred.Model(obt_size=70,
-                              tbt_size=33,
-                              prot_size=None,
-                              num_chunks=5,
-                              optimizer="adam",
-                              mask_weight=0.33,
-                              lddt_weight=10.0,
-                              feature_mask = masks,
-                              ignore3dconv = args.no_3dconv,
-                              name=args.folder)
+    if not args.esto_loss_only:
+        model = pyErrorPred.Model(obt_size=70,
+                                  tbt_size=33,
+                                  prot_size=None,
+                                  num_chunks=5,
+                                  optimizer="adam",
+                                  mask_weight=0.33,
+                                  lddt_weight=10.0,
+                                  feature_mask = masks,
+                                  ignore3dconv = args.no_3dconv,
+                                  name=args.folder,
+                                  scaled_loss=args.scaled_loss,
+                                  label_smoothing=args.label_smoothing,
+                                  no_last_dilation = args.no_last_dilation,
+                                  partial_instance_norm = args.partial,
+                                  transpose_matrix = args.transpose_matrix,
+                                  self_attention = args.self_attention,
+                                  nretype = 20 if args.new else 167)
+    else:
+        model = pyErrorPred.Model(obt_size=70,
+                                  tbt_size=33,
+                                  prot_size=None,
+                                  num_chunks=5,
+                                  optimizer="adam",
+                                  mask_weight=0.01,
+                                  lddt_weight=0.01,
+                                  feature_mask = masks,
+                                  ignore3dconv = args.no_3dconv,
+                                  name=args.folder,
+                                  scaled_loss=args.scaled_loss,
+                                  label_smoothing=args.label_smoothing,
+                                  no_last_dilation = args.no_last_dilation, 
+                                  partial_instance_norm = args.partial,
+                                  transpose_matrix = args.transpose_matrix,
+                                  self_attention = args.self_attention,
+                                  nretype = 20 if args.new else 167)
     if restoreModel:
         model.load()
    
